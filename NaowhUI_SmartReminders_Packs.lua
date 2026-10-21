@@ -52,6 +52,7 @@ local LICENSE_MARKER = ":LIC1:"
 -- value: what every entry of a flat section must be. perEntry: merged into an existing profile
 -- reminder by reminder rather than a boss at a time.
 local SECTIONS = {
+    { field = "desktopReminders", label = ns.L("desktop reminder profile"), count = "keys", value = "string" },
     { field = "presets",         label = ns.L("spec priority lists"),  count = "nested" },
     { field = "activePreset",    label = ns.L("active preset choice"), count = "keys", value = "string" },
     { field = "bossLists",       label = ns.L("per-boss orders"),      count = "keys", value = "table" },
@@ -133,7 +134,7 @@ local TRIGGER_FIELDS = { type = "string", spellID = "number", delay = "number|st
     stage = "number", leadTime = "number", timeleft = "number", counter = "string|number",
     target = "string", auraEvent = "string", mapID = "number" }
 local DISPLAY_FIELDS = { type = "string", text = "string", spellID = "number", dur = "number",
-    sound = "string", tts = "boolean", glowTarget = "string", hideAfterCastID = "number" }
+    sound = "string", tts = "boolean", ttsText = "string", glowTarget = "string", hideAfterCastID = "number" }
 local ENTRY_FIELDS = { name = "string", enabled = "boolean", specID = "number", healerReminder = "boolean",
     preset = "string", mode = "string", defensive = "boolean", dur = "number",
     text = "string", sound = "string", abilitySpellID = "number" }
@@ -145,7 +146,7 @@ local function ValidEntry(entry)
         if v ~= nil and type(v) ~= "table" then return false end
     end
     if entry.list and not SpellList(entry.list) then return false end
-    if not FlagMap(entry.together) then return false end
+    if not FlagMap(entry.together) or not FlagMap(entry.difficulties) then return false end
     if entry.trigger and not Fields(entry.trigger, TRIGGER_FIELDS) then return false end
     local display = entry.display
     if display and (not Fields(display, DISPLAY_FIELDS)
@@ -153,7 +154,7 @@ local function ValidEntry(entry)
     if entry.color and not Fields(entry.color, COLOR_FIELDS) then return false end
     local target = entry.target
     if target then
-        if not Fields(target, { all = "boolean", kind = "string", value = "string|number" }) then
+        if not Fields(target, { all = "boolean", matchAny = "boolean", kind = "string", value = "string|number" }) then
             return false
         end
         for _, key in ipairs({ "roles", "classes", "specs", "names", "subgroups" }) do
@@ -850,7 +851,7 @@ end
 -- choices are theirs, and taking them would restyle the whole profile as a side effect.
 local MERGE_WHOLE_SPEC = { presets = true, activePreset = true,
     abilityBindings = true, integrationRules = true }
-local MERGE_NO_SPEC = { raidReminders = true, callouts = true, audioOff = true }
+local MERGE_NO_SPEC = { raidReminders = true, callouts = true, audioOff = true, desktopReminders = true }
 
 function ns.MergeProfileFromPack(payload, sourceName, targetName, opts)
     opts = type(opts) == "table" and opts or {}

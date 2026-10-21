@@ -48,6 +48,7 @@ env.FormatReminderMsg = function(text) return text end
 ns.Print = function() displayed = displayed + 1 end
 ns.PlayReminderSound = function() sounds = sounds + 1 end
 ns.SpeakReminderTTS = function() speech = speech + 1 end
+ns.RaidReminderDifficultyMatches = function() return true end
 Eval(Slice(raid, "function ns.DisplayRaidReminder(entry, preview)", "function ns.PreviewRaidReminder"), env)
 healer.display = { type = "chat", text = "Healer" }
 ordinary.display = { type = "chat", text = "Everyone" }

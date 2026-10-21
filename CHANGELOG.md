@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Added
+- Desktop-authored unified profiles: defensive sets, dungeon mechanics and scheduled raid assignments remain in one NSRPACK2 string. Optional difficulty filters restrict authored reminders to Heroic, Mythic or Mythic+.
+- Explicit OR recipient filters for migrated NSRT reminders, realm-qualified player names, and custom TTS text. Existing NSR recipient filters retain their AND behavior.
+- Unified profiles pause reminders and show a message when NorthernSkyRaidTools or TimelineReminders is loaded, avoiding duplicate reminder engines. Ordinary profiles retain their existing behavior.
+- TOC targets include Retail 12.1.5 (120105) and Forever 1.60.1 (16001). Runtime checks here do not replace testing in both live clients.
+
 ## 1.4.28
 
 ### Added

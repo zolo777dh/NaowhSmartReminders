@@ -64,16 +64,24 @@ end
 -- name isn't found (out of group, typo, or just not visible in the roster this frame).
 local function UnitTokenForName(name)
     if not name or name == "" then return nil end
-    if UnitName("player") == name then return "player" end
+    local function Matches(unit)
+        if UnitName(unit) == name then return true end
+        if UnitFullName then
+            local short, realm = UnitFullName(unit)
+            return short and realm and (short .. "-" .. realm:gsub("%s+", "")) == name
+        end
+        return false
+    end
+    if Matches("player") then return "player" end
     if IsInRaid and IsInRaid() then
         for i = 1, 40 do
             local unit = "raid" .. i
-            if UnitExists(unit) and UnitName(unit) == name then return unit end
+            if UnitExists(unit) and Matches(unit) then return unit end
         end
     elseif IsInGroup and IsInGroup() then
         for i = 1, 4 do
             local unit = "party" .. i
-            if UnitExists(unit) and UnitName(unit) == name then return unit end
+            if UnitExists(unit) and Matches(unit) then return unit end
         end
     end
     return nil
@@ -108,6 +116,16 @@ end
 function ns.RaidReminderTargetsMe(target)
     target = ns.NormalizeRaidReminderTarget(target)
     if target.all then return true end
+    if target.matchAny then
+        local found = false
+        for _, group in ipairs({ "roles", "classes", "specs", "names", "subgroups" }) do
+            if target[group] and next(target[group]) then
+                found = true
+                if ns.RaidReminderTargetsMe({ [group] = target[group] }) then return true end
+            end
+        end
+        return not found
+    end
 
     if target.roles and next(target.roles) and not target.roles[UnitGroupRolesAssigned("player")] then
         return false
@@ -120,8 +138,13 @@ function ns.RaidReminderTargetsMe(target)
         local id = ns.CurrentSpec and ns.CurrentSpec()
         if not target.specs[id] then return false end
     end
-    if target.names and next(target.names) and not target.names[UnitName("player")] then
-        return false
+    if target.names and next(target.names) then
+        local name, realm
+        if UnitFullName then name, realm = UnitFullName("player") end
+        name = name or UnitName("player")
+        realm = realm or (GetRealmName and GetRealmName())
+        local full = name and realm and (name .. "-" .. realm:gsub("%s+", ""))
+        if not target.names[name] and not (full and target.names[full]) then return false end
     end
     if target.subgroups and next(target.subgroups) and not target.subgroups[MySubgroup()] then
         return false
@@ -792,8 +815,20 @@ ns.FormatReminderMsg = FormatReminderMsg
 -- The one place every real fire (and, once the editor exists, every Preview click)
 -- routes through -- same "one dispatcher" shape as the existing ns.DisplayReminder for
 -- Custom Reminders.
+-- Desktop-authored schedules can be limited to a raid difficulty. Missing filters
+-- preserve the existing behavior for all profiles created before this extension.
+function ns.RaidReminderDifficultyMatches(entry)
+    local filters = entry and entry.difficulties
+    if type(filters) ~= "table" or not next(filters) then return true end
+    local _, difficulty = ns.PullContext()
+    if not difficulty and GetInstanceInfo then difficulty = select(3, GetInstanceInfo()) end
+    if issecretvalue and issecretvalue(difficulty) then return false end
+    return difficulty and (filters[difficulty] == true or filters[tostring(difficulty)] == true) or false
+end
+
 function ns.DisplayRaidReminder(entry, preview)
     if not ns.IsReminderEnabled(entry, preview) then return end
+    if not preview and not ns.RaidReminderDifficultyMatches(entry) then return end
     local display = entry and entry.display
     if not display then return end
 
