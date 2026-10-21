@@ -18,6 +18,9 @@ assert(not ns.RaidReminderDifficultyMatches({difficulties={[16]=true}}))
 diff=16;assert(ns.RaidReminderDifficultyMatches({difficulties={["16"]=true}}))
 assert(ns.RaidReminderDifficultyMatches({}))
 local loaded,db={}, {desktopReminders={schema=1}}
+local played
+ns.UI={_PlayLSMSound=function(path)played=path end}
+ns.PlayReminderSound=function(display)played=display.sound end
 local spoken
 ns.SpeakReminderTTS=function(_,value)spoken=value end
 ns.DB=function()return db end;ns.IsReminderEnabled=function(e)return e.enabled~=false end;ns.Print=function()end
@@ -28,4 +31,6 @@ assert(not ns.IsReminderEnabled({enabled=true}));assert(ns.IsReminderEnabled({en
 db.desktopReminders=nil;assert(ns.IsReminderEnabled({enabled=true}));events[1]()
 ns.SpeakReminderTTS({ttsText="Custom"},"Visible");assert(spoken=="Custom")
 ns.SpeakReminderTTS({ttsText=""},"Visible");assert(spoken=="Visible")
+ns.PlayReminderSound({sound="Interface\\AddOns\\NaowhSmartReminders\\Media\\Voice\\use-a-defensive.ogg"});assert(played:find("Interface",1,true))
+ns.PlayReminderSound({sound="voice:move-out"});assert(played=="voice:move-out")
 print("DESKTOP_UNIFIED_TARGETS_DIFFICULTY_AND_CONFLICTS_OK")

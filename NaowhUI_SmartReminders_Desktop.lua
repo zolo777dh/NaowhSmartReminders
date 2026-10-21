@@ -34,3 +34,17 @@ if speak then
         return speak(display, (type(display.ttsText) == "string" and display.ttsText ~= "" and display.ttsText) or formattedText, preview)
     end
 end
+
+local play = ns.PlayReminderSound
+if play then
+    function ns.PlayReminderSound(display)
+        local sound = display and display.sound
+        if type(sound) == "string" and sound:match("^Interface[\\/]") then
+            local extension = sound:lower():match("%.(%w+)$")
+            if extension == "ogg" or extension == "mp3" or extension == "wav" then
+                return ns.UI._PlayLSMSound(sound)
+            end
+        end
+        return play(display)
+    end
+end
